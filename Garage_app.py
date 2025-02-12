@@ -1,19 +1,11 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
-import bcrypt
 from datetime import datetime
 
 # ✅ Ensure set_page_config is the first Streamlit command
 st.set_page_config(page_title="GO AHEAD MOTORS", page_icon="🔧", layout="wide")
 
 # ✅ Persistent Storage for Authentication & Jobs
-def get_hashed_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed.encode())
-
 @st.cache_data
 def load_jobs():
     return pd.DataFrame(columns=["Date", "Time", "Car Type", "Car Owner", "Student", "Price (MWK)", "Commission %", "Student Earnings (MWK)", "Manager Earnings (MWK)"])
@@ -23,7 +15,7 @@ if "jobs" not in st.session_state:
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "manager_accounts" not in st.session_state:
-    st.session_state.manager_accounts = {}
+    st.session_state.manager_accounts = {"admin": "admin123"}  # Default accounts for testing
 if "current_user" not in st.session_state:
     st.session_state.current_user = ""
 if "view_records" not in st.session_state:
@@ -31,7 +23,7 @@ if "view_records" not in st.session_state:
 
 # Authentication Functions
 def login(username, password):
-    if username in st.session_state.manager_accounts and check_password(password, st.session_state.manager_accounts[username]):
+    if username in st.session_state.manager_accounts and st.session_state.manager_accounts[username] == password:
         st.session_state.authenticated = True
         st.session_state.current_user = username
         st.rerun()
@@ -42,7 +34,7 @@ def signup(username, password):
     if username in st.session_state.manager_accounts:
         st.error("Username already exists. Choose another.")
     else:
-        st.session_state.manager_accounts[username] = get_hashed_password(password)
+        st.session_state.manager_accounts[username] = password
         st.success("Account created successfully! Please log in.")
 
 # Login / Signup UI
